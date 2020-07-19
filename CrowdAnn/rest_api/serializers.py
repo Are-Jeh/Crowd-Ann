@@ -16,7 +16,7 @@ class GroupSerializer(serializers.HyperlinkedModelSerializer):
 class ImageSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = Image
-        fields = ['image_id','image_source']
+        fields = ['image_id','image_source',]
      
 class AnnotationSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:

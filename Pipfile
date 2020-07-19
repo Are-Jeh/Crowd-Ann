@@ -11,6 +11,9 @@ django-rest-framework = "*"
 django-oauth-toolkit = "*"
 djangorestframework = "*"
 django-cors-middleware = "*"
+pillow = "*"
+numpy = "*"
+scipy = "*"
 
 [requires]
 python_version = "3.6"
