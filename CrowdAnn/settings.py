@@ -137,3 +137,6 @@ CORS_ORIGIN_ALLOW_ALL = True
 
 MEDIA_URL =  '/'
 MEDIA_ROOT = os.path.join(BASE_DIR, "images")
+
+
+GDAL_LIBRARY_PATH = "/"
