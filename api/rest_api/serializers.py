@@ -5,7 +5,7 @@ from .models import Image, Annotation
 class ImageSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = Image
-        fields = ['image_id','image_source',]
+        fields = ['image_id','image_source', 'image_height', 'image_width']
      
 class AnnotationSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:

@@ -4,8 +4,9 @@ from rest_framework import views
 from .serializers import ImageSerializer, AnnotationSerializer
 from .models import Image, Annotation
 from scipy.spatial import distance
+from rest_framework  import permissions, authentication
+from django.views.decorators.csrf import csrf_exempt
 import json
-
 
 def scale_image( height, width, canvas_size,x,y):
     origin      =(canvas_size[0][0],canvas_size[0][1], 0)
@@ -29,42 +30,46 @@ def get_image(request):
     list_size = images.count()
     if id >= list_size:
         id = id%list_size
+    # print(serializer.data[id]);
     return JsonResponse(serializer.data[id], safe=False)
          
-class AnnotationView(views.APIView):
-    model = Image, Annotation
-    serializer = ImageSerializer, AnnotationSerializer
-    
-    def post(self, request, *args, **kwargs):
-        try:
-            # post_data = json.loads(request.body.decode("utf-8"))
-            post_data = request.data
-            # print(post_data)
-            if post_data == '':
-                print("No Data Provided")
-            result = {}
-            if request.method == 'POST':
-                
-                canvas_size = post_data['canvas_size']
-                x_cor = post_data['x_cor']
-                y_cor = post_data['y_cor']
-                newCoordinates_x = []
-                newCoordinates_y = []
-                images = Image.objects.get(pk=post_data['image_id'])
-                # print(images.image_id)
-                for i, j in zip(x_cor, y_cor):
-                    x, y = scale_image(images.image_height, images.image_width, canvas_size, i, j)
-                    newCoordinates_x.append(x)
-                    newCoordinates_y.append(y)
-                new_annotation = Annotation()
-                new_annotation.image_id = images
-                new_annotation.label = post_data['label']
-                new_annotation.user = 'abcd'
-                new_annotation.coordinates_x = newCoordinates_x
-                new_annotation.coordinates_y = newCoordinates_y
-                new_annotation.save()
-                result['status'] = True
-                return JsonResponse(result, safe=False)
-        except:
-            result['status'] = False
+# class AnnotationView(views.APIView):
+#     model = Image, Annotation
+#     serializer = ImageSerializer, AnnotationSerializer
+#     permission_classes = [permissions.AllowAny]
+#     authentication_classes = [authentication.RemoteUserAuthentication]
+@csrf_exempt
+def annotation_save(request, *args, **kwargs):
+    result ={}
+    try:
+        post_data = json.loads(request.body.decode("utf-8"))
+        # post_data = request.data
+        # print(post_data)
+        if post_data == '':
+            print("No Data Provided")
+        result = {}
+        if request.method == 'POST':
+            
+            canvas_size = post_data['canvas_size']
+            x_cor = post_data['x_cor']
+            y_cor = post_data['y_cor']
+            newCoordinates_x = []
+            newCoordinates_y = []
+            images = Image.objects.get(pk=post_data['image_id'])
+            # print(images.image_id)
+            for i, j in zip(x_cor, y_cor):
+                x, y = scale_image(images.image_height, images.image_width, canvas_size, i, j)
+                newCoordinates_x.append(x)
+                newCoordinates_y.append(y)
+            new_annotation = Annotation()
+            new_annotation.image_id = images
+            new_annotation.label = post_data['label']
+            new_annotation.user = 'abcd'
+            new_annotation.coordinates_x = newCoordinates_x
+            new_annotation.coordinates_y = newCoordinates_y
+            new_annotation.save()
+            result['status'] = True
             return JsonResponse(result, safe=False)
+    except:
+        result['status'] = False
+        return JsonResponse(result, safe=False)
