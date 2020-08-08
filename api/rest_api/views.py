@@ -1,5 +1,5 @@
 from django.shortcuts import render, HttpResponse
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponseForbidden
 from rest_framework import views
 from .serializers import ImageSerializer, AnnotationSerializer
 from .models import Image, Annotation
@@ -28,13 +28,19 @@ class ImageView(views.APIView):
     
     def get(self, request):
         id = int(request.GET.get('id'))
-        images = Image.objects.exclude(image_id__in = Annotation.objects.values('image_id'))
-        serializer = ImageSerializer(data =images, many= True)
-        serializer.is_valid()
-        list_size = images.count()
-        if id >= list_size:
-            return JsonResponse({'status' : False}, safe=False)
-        return JsonResponse(serializer.data[id], safe=False)
+        token = request.GET.get('token')
+        r = requests.post('http://localhost:8080/api/token/', json={"token": token})
+        user_data = r.json()
+        if user_data['status']:
+            images = Image.objects.exclude(image_id__in = Annotation.objects.values('image_id'))
+            serializer = ImageSerializer(data =images, many= True)
+            serializer.is_valid()
+            list_size = images.count()
+            if id >= list_size:
+                return JsonResponse({'status' : False}, safe=False)
+            return JsonResponse(serializer.data[id], safe=False)
+        else:
+            return HttpResponseForbidden()
          
 class AnnotationView(views.APIView):
     model = Image, Annotation
@@ -43,31 +49,39 @@ class AnnotationView(views.APIView):
     authentication_classes = [authentication.RemoteUserAuthentication]
 
     def post(self, request, *args, **kwargs):
-        result ={}
-        try:
-            # post_data = json.loads(request.body.decode("utf-8"))
+        if request.method == 'POST':
             post_data = request.data
-            # print(post_data)
-            if post_data == '':
-                print("No Data Provided")
-            result = {}
-            if request.method == 'POST':
-                # r = requests.post('http://localhost:8080', json={"token": "123456"})
-                x_cor = post_data['x_cor']
-                y_cor = post_data['y_cor']
-                images = Image.objects.get(pk=post_data['image_id'])
-                new_annotation = Annotation()
-                new_annotation.image_id = images
-                new_annotation.label = post_data['label']
-                new_annotation.user = 'abcd'
-                new_annotation.coordinates_x = x_cor
-                new_annotation.coordinates_y = y_cor
-                new_annotation.save()
-                result['status'] = True
-                return JsonResponse(result, safe=False)
-        except:
-            result['status'] = False
-            return JsonResponse(result, safe=False)
+            result ={}
+            token = post_data['token']
+            print(token)
+            r = requests.post('http://localhost:8080/api/token/', json={"token": token})
+            user_data = r.json()
+            if user_data['status']:
+                try:
+                    # post_data = json.loads(request.body.decode("utf-8"))
+                    # print(post_data)
+                    if post_data == '':
+                        print("No Data Provided")
+                    result = {}
+                
+                    # r = requests.post('http://localhost:8080', json={"token": "123456"})
+                    x_cor = post_data['x_cor']
+                    y_cor = post_data['y_cor']
+                    images = Image.objects.get(pk=post_data['image_id'])
+                    new_annotation = Annotation()
+                    new_annotation.image_id = images
+                    new_annotation.label = post_data['label']
+                    new_annotation.user = user_data['email']
+                    new_annotation.coordinates_x = x_cor
+                    new_annotation.coordinates_y = y_cor
+                    new_annotation.save()
+                    result['status'] = True
+                    return JsonResponse(result, safe=False)
+                except:
+                    result['status'] = False
+                    return JsonResponse(result, safe=False)
+            else:
+                return HttpResponseForbidden()
 
 class RetrieveAnnotationView(views.APIView):
     model = Image, Annotation
