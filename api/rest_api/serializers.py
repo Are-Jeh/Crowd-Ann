@@ -7,7 +7,8 @@ class ImageSerializer(serializers.HyperlinkedModelSerializer):
         model = Image
         fields = ['image_id','image_source', 'image_height', 'image_width']
      
-class AnnotationSerializer(serializers.HyperlinkedModelSerializer):
+class AnnotationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Annotation
-        fields = ['annotation_id', 'image_id', 'coordinates', 'label']
+        # fields = ['annotation_id', 'image_id', 'coordinates_x', 'coordinates_y', 'label']
+        fields = '__all__'

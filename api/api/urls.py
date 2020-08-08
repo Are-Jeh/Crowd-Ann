@@ -1,12 +1,14 @@
 from django.contrib import admin
 from django.urls import path, include
-from rest_api.views import get_image, annotation_save
+from rest_api.views import ImageView, AnnotationView, RetrieveAnnotationView, RetrieveImageView
 from django.conf import settings
 from django.conf.urls.static import static
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('annotation/save',annotation_save, name='save'),
-    path('image',get_image, name='image')
+    path('annotation/save',AnnotationView.as_view()),
+    path('image',ImageView.as_view()),
+    path('db/images/', RetrieveImageView.as_view()),
+    path('db/annotation', RetrieveAnnotationView.as_view()),
 ]
 
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
