@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_api',
 	'corsheaders',
+    'drf_yasg'
 ]
 
 MIDDLEWARE = [
@@ -134,3 +135,4 @@ STATIC_ROOT = os.path.join(PROJECT_ROOT, 'static')
 MEDIA_URL =  '/'
 MEDIA_ROOT = os.path.join(BASE_DIR, "images")
 
+REST_FRAMEWORK = {'DEFAULT_SCHEMA_CLASS':'rest_framework.schemas.coreapi.AutoSchema'}
