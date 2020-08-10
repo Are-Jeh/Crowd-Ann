@@ -74,6 +74,7 @@ class AnnotationView(views.APIView):
                     new_annotation.user = user_data['email']
                     new_annotation.coordinates_x = x_cor
                     new_annotation.coordinates_y = y_cor
+                    new_annotation.shape = post_data['shape']
                     new_annotation.save()
                     result['status'] = True
                     return JsonResponse(result, safe=False)

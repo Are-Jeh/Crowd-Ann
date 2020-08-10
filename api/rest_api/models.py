@@ -3,7 +3,10 @@ from django.db.models.signals import post_save
 from django.contrib.postgres.fields import ArrayField
 import uuid
 import cv2
+import os
 # from admin.models import User
+
+
 
 class Image(models.Model):
     image_id = models.UUIDField(primary_key=True, default= uuid.uuid4, editable=False)
@@ -18,9 +21,10 @@ class Annotation(models.Model):
     annotation_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     image_id = models.ForeignKey('Image', on_delete=models.CASCADE)
     user = models.CharField(max_length=100)
-    coordinates_x = ArrayField(models.IntegerField(), null = True)
+    coordinates_x = ArrayField(models.FloatField(), null = True)
     label = models.CharField(max_length=300)
-    coordinates_y = ArrayField(models.IntegerField(), null = True)
+    coordinates_y = ArrayField(models.FloatField(), null = True)
+    shape = models.CharField(max_length=255, default="polygon")
     def __str__(self):
         return self.label
 
