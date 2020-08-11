@@ -8,20 +8,16 @@ from rest_framework  import permissions, authentication
 from django.views.decorators.csrf import csrf_exempt
 import json
 import requests
-from drf_yasg import openapi
-from drf_yasg.utils import swagger_auto_schema
-# def scale_image( height, width, canvas_size,x,y):
-#     origin      =(canvas_size[0][0],canvas_size[0][1], 0)
-#     right_bottom=(canvas_size[1][0], canvas_size[1][1], 0)
-#     left_top    =(canvas_size[2][0],canvas_size[2][1], 0)
-        
-#     length_str=distance.euclidean(origin,right_bottom)/width
-#     width_str=distance.euclidean(origin,left_top)/height
-        
-#     actual_x=(distance.euclidean(origin,x)/length_str)
-#     actual_y=(distance.euclidean(origin,y)/width_str)
-        
-#     return actual_x,actual_y
+
+
+def scale_image( old_width, old_height, width, height,x,y):
+    ew = float(width/old_width)
+    eh = float(height/old_height)
+    
+    actual_x = float(x*ew)
+    actual_y = float(y*eh)
+
+    return actual_x,actual_y
 
 class ImageView(views.APIView):
     model = Image, Annotation
@@ -29,18 +25,6 @@ class ImageView(views.APIView):
     
 
     def get(self, request):
-        """
-        ...
-
-        ---
-        - list:
-            parameters:
-            - name: body
-            description: JSON object containing two strings: password and username.
-            required: true
-            paramType: body
-            pytype: RequestSerializer
-        """
         
         id = int(request.GET.get('id'))
         token = request.GET.get('token')
@@ -67,21 +51,6 @@ class AnnotationView(views.APIView):
     authentication_classes = [authentication.RemoteUserAuthentication]
 
     
-    @swagger_auto_schema(
-        operation_description="apiview post description override",
-        request_body=openapi.Schema(
-            type=openapi.TYPE_OBJECT,
-            required=['image_id'],
-            properties={
-                'image_id': openapi.Schema(type=openapi.TYPE_STRING),
-                'x_cor': openapi.Schema(type=openapi.TYPE_ARRAY, items=openapi.TYPE_INTEGER),
-                'y_cor': openapi.Schema(type=openapi.TYPE_INTEGER),
-
-            },
-        ),
-        security=[],
-        tags=['annotation'],
-    )
     def post(self, request, *args, **kwargs):
         if request.method == 'POST':
             post_data = request.data
@@ -99,18 +68,26 @@ class AnnotationView(views.APIView):
                     # r = requests.post('http://localhost:8080', json={"token": "123456"})
                     x_cor = post_data['x_cor']
                     y_cor = post_data['y_cor']
+                    new_X = []
+                    new_Y = []
+                                        # print(post_data['image_id'])
                     images = Image.objects.get(pk=post_data['image_id'])
+                    for i in range(len(x_cor)):
+                        x, y = scale_image(images.image_width, images.image_height, images.org_img_width, images.org_img_height, x_cor[i], y_cor[i])
+                        new_X.append(x)
+                        new_Y.append(y)
                     new_annotation = Annotation()
                     new_annotation.image_id = images
                     new_annotation.label = post_data['label']
                     new_annotation.user = user_data['email']
-                    new_annotation.coordinates_x = x_cor
-                    new_annotation.coordinates_y = y_cor
+                    new_annotation.coordinates_x = new_X
+                    new_annotation.coordinates_y = new_Y
                     new_annotation.shape = post_data['shape']
                     new_annotation.save()
                     result['status'] = True
                     return JsonResponse(result, safe=False)
-                except:
+                except Exception as o:
+                    print(o)
                     result['status'] = False
                     return JsonResponse(result, safe=False)
             else:

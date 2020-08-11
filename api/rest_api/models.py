@@ -4,15 +4,24 @@ from django.contrib.postgres.fields import ArrayField
 import uuid
 import cv2
 import os
+import time
 
-
+def path_and_rename(path):
+    def wrapper(instance, filename):
+        ext = filename.split('.')[-1]
+        # get filename
+        if instance.pk:
+            filename = '{}.{}'.format(instance.pk, ext)
+        # return the whole path to the file
+        return os.path.join(path, filename)
+    return wrapper
 
 class Image(models.Model):
     image_id = models.UUIDField(primary_key=True, default= uuid.uuid4, editable=False)
     image_height = models.PositiveIntegerField()
     image_width = models.PositiveIntegerField()
-    image_source = models.ImageField(upload_to='images', height_field='image_height', width_field='image_width')
-    original_image = models.ImageField(upload_to='original_image', null = True, height_field='org_img_height', width_field='org_img_width')
+    image_source = models.ImageField(upload_to=path_and_rename('images'), height_field='image_height', width_field='image_width')
+    original_image = models.ImageField(upload_to=path_and_rename('original_image'), null = True, height_field='org_img_height', width_field='org_img_width')
     org_img_width = models.PositiveIntegerField()
     org_img_height = models.PositiveIntegerField()
     
@@ -37,18 +46,23 @@ def resize(sender, instance, *args, **kwargs):
                     
                     r = float(200/instance.image_height)
                     dim = (int(instance.image_width * r), 200)
-                    instance.original_image = instance.image_source
+                    # instance.original_image = instance.image_source
                     imgUMat = cv2.imread(instance.image_source.path)
                     resized = cv2.resize(imgUMat, dim, interpolation = cv2.INTER_LANCZOS4)
                     cv2.imwrite(instance.image_source.path, resized)
+                    instance.image_height = dim[1]
+                    instance.image_width = dim[0]
                 elif (instance.image_width < 200 and instance.image_height>instance.image_width):
                     r = float(200/instance.image_width)
                     dim = (200,int(instance.image_height*r))
                     # print(dim)
-                    instance.original_image = instance.image_source
+                    # instance.original_image = instance.image_source
                     imgUMat = cv2.imread(instance.image_source.path)
                     resized = cv2.resize(imgUMat, dim, interpolation = cv2.INTER_LANCZOS4)
                     cv2.imwrite(instance.image_source.path, resized)
+                    instance.image_height = dim[1]
+                    instance.image_width = dim[0]
+                instance.save()
             if (max(instance.image_height, instance.image_width)>600):
                 dim = None
                 print(instance.image_source.path)
@@ -56,17 +70,20 @@ def resize(sender, instance, *args, **kwargs):
                     
                     r = float(600/instance.image_height)
                     dim = (int(instance.image_width * r), 600)
-                    instance.original_image = instance.image_source
+                    # instance.original_image = instance.image_source
                     imgUMat = cv2.imread(instance.image_source.path)
                     instance.image_source = cv2.resize(imgUMat, dim, interpolation = cv2.INTER_LANCZOS4)
                     cv2.imwrite(instance.image_source.path, resized)
+                    instance.image_height = dim[1]
+                    instance.image_width = dim[0]
                 elif (instance.image_width > 600 and instance.image_height<instance.image_width):
                     r = float(600/instance.image_width)
                     dim = (600,int(instance.image_height*r))
-                    # print(dim)
-                    instance.original_image = instance.image_source
+                    # instance.original_image = instance.image_source
                     imgUMat = cv2.imread(instance.image_source.path)
                     resized = cv2.resize(imgUMat, dim, interpolation = cv2.INTER_LANCZOS4)
                     cv2.imwrite(instance.image_source.path, resized)
-
+                    instance.image_height = dim[1]
+                    instance.image_width = dim[0]
+                instance.save()
 post_save.connect(resize, sender=Image)
