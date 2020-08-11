@@ -80,6 +80,8 @@ class AnnotationView(views.APIView):
                     new_annotation.image_id = images
                     new_annotation.label = post_data['label']
                     new_annotation.user = user_data['email']
+                    new_annotation.org_coordinates_x = x_cor
+                    new_annotation.org_coordinates_y = y_cor
                     new_annotation.coordinates_x = new_X
                     new_annotation.coordinates_y = new_Y
                     new_annotation.shape = post_data['shape']

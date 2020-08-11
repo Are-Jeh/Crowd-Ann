@@ -32,6 +32,8 @@ class Annotation(models.Model):
     user = models.CharField(max_length=100)
     coordinates_x = ArrayField(models.FloatField(), null = True)
     coordinates_y = ArrayField(models.FloatField(), null = True)
+    org_coordinates_x = ArrayField(models.FloatField(), null = True)
+    org_coordinates_y = ArrayField(models.FloatField(), null = True)
     shape = models.CharField(max_length=255, default="polygon")
     label = models.CharField(max_length=300)
     
